@@ -186,7 +186,17 @@ async def estimate_project(request: ProjectRequest, background_tasks: Background
         ai_analysis = await call_gemini_consultant(request, len(data_processor.processed_projects))
         
         if not ai_analysis:
-            raise HTTPException(status_code=503, detail="AIコンサルタントの分析に失敗しました。")
+            # AIが使用できない場合のフォールバック処理
+            logger.warning("AI分析が利用できないため、基本的な分析にフォールバックします。")
+            ai_analysis = {
+                "project_summary": f"{request.description}の開発プロジェクト",
+                "estimated_category": request.category or "その他",
+                "recommended_technologies": ["JavaScript", "Python", "HTML/CSS"],
+                "functional_requirements": ["基本機能", "ユーザー管理", "データ管理"],
+                "non_functional_requirements": ["セキュリティ", "パフォーマンス"],
+                "potential_risks": ["技術的課題", "スケジュール管理"],
+                "complexity": "中"
+            }
 
         logger.info(f"AI分析結果: {ai_analysis}")
         
@@ -250,5 +260,11 @@ async def health_check():
     }
 
 if __name__ == "__main__":
+    import uvicorn  # 追加
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=port,
+        log_level="info"  # ログレベル明示
+    )
