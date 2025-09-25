@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI工数見積もりツール</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .loading {
+            display: none;
+        }
+        .loading.active {
+            display: inline-block;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .progress-bar {
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- ヘッダー -->
+    <header class="gradient-bg text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold mb-2">
+                    <i class="fas fa-robot mr-3"></i>AI工数見積もりツール
+                </h1>
+                <p class="text-xl opacity-90">アプリのアイディアから瞬時に開発工数を算出</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 入力フォーム -->
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg card-shadow p-8 mb-8">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                    <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>プロジェクトの概要を入力
+                </h2>
+                
+                <form id="estimationForm">
+                    <div class="mb-6">
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                            アプリ・システムのアイディア（詳しく記入するほど精度が向上します）
+                        </label>
+                        <textarea 
+                            id="description" 
+                            name="description" 
+                            rows="6" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            placeholder="例：オンライン予約ができるヘアサロン向けの管理システムを作りたい。顧客情報の管理、予約スケジュールの管理、売上レポートの表示機能が必要。スマホからも利用できるようにしたい。"
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <!-- 必須項目セクション -->
+                    <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+                        <h3 class="text-lg font-semibold text-red-700 mb-3">
+                            <i class="fas fa-exclamation-circle mr-2"></i>必須項目
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="duration" class="block text-sm font-medium text-red-700 mb-2">
+                                    希望開発期間 <span class="text-red-500">*</span>
+                                </label>
+                                <select id="duration" name="duration" class="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500" required>
+                                    <option value="">選択してください</option>
+                                    <option value="1month">1ヶ月以内</option>
+                                    <option value="2months">2ヶ月程度</option>
+                                    <option value="3months">3ヶ月程度</option>
+                                    <option value="4-6months">4-6ヶ月程度</option>
+                                    <option value="6-12months">6ヶ月-1年程度</option>
+                                    <option value="1year+">1年以上</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="users" class="block text-sm font-medium text-red-700 mb-2">
+                                    想定ユーザー数（同時接続） <span class="text-red-500">*</span>
+                                </label>
+                                <select id="users" name="users" class="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500" required>
+                                    <option value="">選択してください</option>
+                                    <option value="small">小規模（～100人）</option>
+                                    <option value="medium">中規模（100～1,000人）</option>
+                                    <option value="large">大規模（1,000～10,000人）</option>
+                                    <option value="enterprise">企業規模（10,000人以上）</option>
+                                    <option value="public">パブリック（アクセス数未定）</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- オプション項目セクション -->
+                    <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
+                        <h3 class="text-lg font-semibold text-blue-700 mb-3">
+                            <i class="fas fa-cog mr-2"></i>追加情報（任意）
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="category" class="block text-sm font-medium text-blue-700 mb-2">
+                                    システムカテゴリー
+                                </label>
+                                <select id="category" name="category" class="w-full px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="">選択してください</option>
+                                    <option value="EC・通販">EC・通販</option>
+                                    <option value="業務システム">業務システム</option>
+                                    <option value="予約・管理">予約・管理</option>
+                                    <option value="コーポレート">コーポレートサイト</option>
+                                    <option value="CMS・メディア">CMS・メディア</option>
+                                    <option value="モバイルアプリ">モバイルアプリ</option>
+                                    <option value="その他">その他</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="platform" class="block text-sm font-medium text-blue-700 mb-2">
+                                    プラットフォーム
+                                </label>
+                                <select id="platform" name="platform" class="w-full px-4 py-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="web">Webアプリ</option>
+                                    <option value="mobile">モバイルアプリ</option>
+                                    <option value="both">Web + モバイル</option>
+                                    <option value="desktop">デスクトップアプリ</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        type="submit" 
+                        id="submitBtn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition duration-300 transform hover:scale-105"
+                    >
+                        <i class="fas fa-calculator mr-2"></i>
+                        <span class="loading" id="loadingText">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>見積もり中...
+                        </span>
+                        <span id="buttonText">見積もりを実行</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 結果表示エリア -->
+            <div id="results" class="hidden fade-in">
+                <!-- 見積もり概要 -->
+                <div class="bg-white rounded-lg card-shadow p-8 mb-6">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                        <i class="fas fa-chart-line text-green-500 mr-2"></i>見積もり結果
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="text-center p-6 bg-blue-50 rounded-lg">
+                            <div class="text-3xl font-bold text-blue-600" id="totalHours">-</div>
+                            <div class="text-gray-600">総工数（時間）</div>
+                        </div>
+                        <div class="text-center p-6 bg-green-50 rounded-lg">
+                            <div class="text-3xl font-bold text-green-600" id="totalCost">-</div>
+                            <div class="text-gray-600">概算費用（円）</div>
+                        </div>
+                        <div class="text-center p-6 bg-purple-50 rounded-lg">
+                            <div class="text-3xl font-bold text-purple-600" id="confidence">-</div>
+                            <div class="text-gray-600">信頼度</div>
+                        </div>
+                    </div>
+
+                    <!-- プロジェクト概要とリクエスト詳細 -->
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <h3 class="font-semibold text-gray-800 mb-2">プロジェクト概要</h3>
+                        <p id="projectDescription" class="text-gray-700 mb-3">-</p>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <span class="font-medium text-gray-600">開発期間:</span>
+                                <div id="projectDuration" class="font-semibold">-</div>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-600">想定規模:</span>
+                                <div id="projectUsers" class="font-semibold">-</div>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-600">カテゴリ:</span>
+                                <div id="projectCategory" class="font-semibold">-</div>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-600">プラットフォーム:</span>
+                                <div id="projectPlatform" class="font-semibold">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 推定機能リスト -->
+                <div class="bg-white rounded-lg card-shadow p-8 mb-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="fas fa-list text-blue-500 mr-2"></i>推定機能リスト
+                    </h3>
+                    <div id="featuresList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <!-- 機能リストがここに表示される -->
+                    </div>
+                </div>
+
+                <!-- フェーズ別工数 -->
+                <div class="bg-white rounded-lg card-shadow p-8 mb-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="fas fa-tasks text-orange-500 mr-2"></i>フェーズ別工数
+                    </h3>
+                    <div id="phasesList">
+                        <!-- フェーズ別情報がここに表示される -->
+                    </div>
+                </div>
+
+                <!-- 類似プロジェクト -->
+                <div class="bg-white rounded-lg card-shadow p-8 mb-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="fas fa-search text-indigo-500 mr-2"></i>参考にした類似プロジェクト
+                    </h3>
+                    <div id="similarProjects">
+                        <!-- 類似プロジェクトがここに表示される -->
+                    </div>
+                </div>
+
+                <!-- ダウンロードボタン -->
+                <div class="text-center">
+                    <button 
+                        id="downloadBtn"
+                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
+                    >
+                        <i class="fas fa-download mr-2"></i>結果をCSVでダウンロード
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2024 AI工数見積もりツール. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        let currentEstimation = null;
+
+        document.getElementById('estimationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            
+            // 必須項目のバリデーション
+            const duration = formData.get('duration');
+            const users = formData.get('users');
+            
+            if (!duration || !users) {
+                alert('必須項目（開発期間・想定ユーザー数）を選択してください。');
+                return;
+            }
+            
+            const data = {
+                description: formData.get('description'),
+                category: formData.get('category') || null,
+                platform: formData.get('platform') || 'web',
+                duration: duration,
+                users: users
+            };
+
+            // ローディング表示
+            showLoading(true);
+
+            try {
+                const response = await fetch('/api/estimate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                currentEstimation = result;
+                displayResults(result);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('見積もり処理中にエラーが発生しました。もう一度お試しください。');
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        function showLoading(isLoading) {
+            const loadingText = document.getElementById('loadingText');
+            const buttonText = document.getElementById('buttonText');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (isLoading) {
+                loadingText.classList.add('active');
+                buttonText.style.display = 'none';
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            } else {
+                loadingText.classList.remove('active');
+                buttonText.style.display = 'inline';
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+
+        function displayResults(result) {
+            // 基本情報
+            document.getElementById('totalHours').textContent = result.total_hours.toLocaleString();
+            document.getElementById('totalCost').textContent = '¥' + result.total_cost.toLocaleString();
+            document.getElementById('confidence').textContent = Math.round(result.confidence_score * 100) + '%';
+            document.getElementById('projectDescription').textContent = result.project_description;
+
+            // プロジェクト詳細情報を取得して表示
+            const form = document.getElementById('estimationForm');
+            const formData = new FormData(form);
+            
+            // 期間・規模・カテゴリ情報の表示
+            const durationMap = {
+                '1month': '1ヶ月以内',
+                '2months': '2ヶ月程度', 
+                '3months': '3ヶ月程度',
+                '4-6months': '4-6ヶ月程度',
+                '6-12months': '6ヶ月-1年程度',
+                '1year+': '1年以上'
+            };
+            
+            const usersMap = {
+                'small': '小規模（～100人）',
+                'medium': '中規模（100～1,000人）',
+                'large': '大規模（1,000～10,000人）',
+                'enterprise': '企業規模（10,000人以上）',
+                'public': 'パブリック（アクセス数未定）'
+            };
+            
+            document.getElementById('projectDuration').textContent = durationMap[formData.get('duration')] || '-';
+            document.getElementById('projectUsers').textContent = usersMap[formData.get('users')] || '-';
+            document.getElementById('projectCategory').textContent = formData.get('category') || '未選択';
+            document.getElementById('projectPlatform').textContent = formData.get('platform') || 'web';
+
+            // 機能リスト
+            const featuresList = document.getElementById('featuresList');
+            featuresList.innerHTML = '';
+            result.estimated_features.forEach(feature => {
+                const div = document.createElement('div');
+                div.className = 'bg-blue-50 text-blue-800 px-3 py-2 rounded-lg text-sm';
+                div.innerHTML = `<i class="fas fa-check mr-2"></i>${feature}`;
+                featuresList.appendChild(div);
+            });
+
+            // フェーズ別工数
+            const phasesList = document.getElementById('phasesList');
+            phasesList.innerHTML = '';
+            Object.entries(result.phases).forEach(([phase, data]) => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg mb-2';
+                div.innerHTML = `
+                    <div class="font-medium">${phase}</div>
+                    <div class="text-right">
+                        <div class="font-bold text-lg">${data.hours}時間</div>
+                        <div class="text-sm text-gray-600">¥${data.cost.toLocaleString()}</div>
+                    </div>
+                `;
+                phasesList.appendChild(div);
+            });
+
+            // 類似プロジェクト
+            const similarProjects = document.getElementById('similarProjects');
+            similarProjects.innerHTML = '';
+            if (result.similar_projects.length === 0) {
+                similarProjects.innerHTML = '<p class="text-gray-500 text-center py-4">類似プロジェクトが見つかりませんでした</p>';
+            } else {
+                result.similar_projects.forEach(project => {
+                    const div = document.createElement('div');
+                    div.className = 'border border-gray-200 rounded-lg p-4 mb-4';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-semibold text-lg">${project.title}</h4>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">類似度: ${project.similarity}</span>
+                        </div>
+                        <p class="text-gray-700 mb-2">${project.description}</p>
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>工数: ${project.hours}時間</span>
+                            <span>費用: ${project.cost}</span>
+                        </div>
+                        ${project.company ? `<div class="text-xs text-blue-600 mt-1">開発会社: ${project.company}</div>` : ''}
+                    `;
+                    similarProjects.appendChild(div);
+                });
+            }
+
+            // 結果表示
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }bg-gray-50 rounded-lg mb-2';
+                div.innerHTML = `
+                    <div class="font-medium">${phase}</div>
+                    <div class="text-right">
+                        <div class="font-bold text-lg">${data.hours}時間</div>
+                        <div class="text-sm text-gray-600">¥${data.cost.toLocaleString()}</div>
+                    </div>
+                `;
+                phasesList.appendChild(div);
+            });
+
+            // 類似プロジェクト
+            const similarProjects = document.getElementById('similarProjects');
+            similarProjects.innerHTML = '';
+            if (result.similar_projects.length === 0) {
+                similarProjects.innerHTML = '<p class="text-gray-500 text-center py-4">類似プロジェクトが見つかりませんでした</p>';
+            } else {
+                result.similar_projects.forEach(project => {
+                    const div = document.createElement('div');
+                    div.className = 'border border-gray-200 rounded-lg p-4 mb-4';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-semibold text-lg">${project.title}</h4>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">類似度: ${project.similarity}</span>
+                        </div>
+                        <p class="text-gray-700 mb-2">${project.description}</p>
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>工数: ${project.hours}時間</span>
+                            <span>費用: ${project.cost}</span>
+                        </div>
+                    `;
+                    similarProjects.appendChild(div);
+                });
+            }
+
+            // 結果表示
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // CSVダウンロード
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            if (!currentEstimation) return;
+
+            const csvData = generateCSV(currentEstimation);
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'estimation_result.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        function generateCSV(result) {
+            let csv = '\uFEFF'; // BOM for Excel compatibility
+            csv += '項目,内容\n';
+            csv += `プロジェクト概要,"${result.project_description}"\n`;
+            
+            // 必須項目情報を追加
+            const form = document.getElementById('estimationForm');
+            const formData = new FormData(form);
+            
+            const durationMap = {
+                '1month': '1ヶ月以内',
+                '2months': '2ヶ月程度', 
+                '3months': '3ヶ月程度',
+                '4-6months': '4-6ヶ月程度',
+                '6-12months': '6ヶ月-1年程度',
+                '1year+': '1年以上'
+            };
+            
+            const usersMap = {
+                'small': '小規模（～100人）',
+                'medium': '中規模（100～1,000人）',
+                'large': '大規模（1,000～10,000人）',
+                'enterprise': '企業規模（10,000人以上）',
+                'public': 'パブリック（アクセス数未定）'
+            };
+            
+            csv += `希望開発期間,${durationMap[formData.get('duration')] || '未設定'}\n`;
+            csv += `想定ユーザー数,${usersMap[formData.get('users')] || '未設定'}\n`;
+            csv += `カテゴリ,${formData.get('category') || '未選択'}\n`;
+            csv += `プラットフォーム,${formData.get('platform') || 'web'}\n`;
+            csv += `総工数,${result.total_hours}時間\n`;
+            csv += `概算費用,${result.total_cost}円\n`;
+            csv += `信頼度,${Math.round(result.confidence_score * 100)}%\n`;
+            csv += `データソース,"${result.data_source}"\n\n`;
+            
+            csv += 'フェーズ,工数,費用\n';
+            Object.entries(result.phases).forEach(([phase, data]) => {
+                csv += `${phase},${data.hours}時間,${data.cost}円\n`;
+            });
+            
+            csv += '\n推定機能\n';
+            result.estimated_features.forEach(feature => {
+                csv += `${feature}\n`;
+            });
+            
+            if (result.similar_projects && result.similar_projects.length > 0) {
+                csv += '\n類似プロジェクト\n';
+                csv += 'タイトル,工数,費用,類似度,開発会社\n';
+                result.similar_projects.forEach(project => {
+                    csv += `"${project.title}",${project.hours},${project.cost},${project.similarity},"${project.company || ''}"\n`;
+                });
+            }
+
+            return csv;
+        }
+    </script>
+</body>
+</html>
