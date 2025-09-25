@@ -135,11 +135,12 @@ def calculate_user_scale_impact(users: str, base_cost: int) -> int:
     return int(base_cost * multipliers.get(users, 1.3))
 
 def calculate_phases(total_hours: int, category: str) -> Dict[str, Dict[str, int]]:
-    ratios = {
+    ratios_options = {
         "EC・通販": {"要件定義・設計": 0.25, "開発": 0.45, "テスト": 0.20, "デザイン": 0.10},
         "業務システム": {"要件定義・設計": 0.30, "開発": 0.50, "テスト": 0.15, "デザイン": 0.05},
         "default": {"要件定義・設計": 0.20, "開発": 0.50, "テスト": 0.20, "デザイン": 0.10}
-    }.get(category, "default")
+    }
+    ratios = ratios_options.get(category, ratios_options["default"])
     
     phases = {}
     for phase, ratio in ratios.items():
