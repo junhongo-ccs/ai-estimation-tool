@@ -360,99 +360,61 @@
             document.getElementById('projectCategory').textContent = formData.get('category') || '未選択';
             document.getElementById('projectPlatform').textContent = formData.get('platform') || 'web';
 
-            // 機能リスト
-            const featuresList = document.getElementById('featuresList');
-            featuresList.innerHTML = '';
-            result.estimated_features.forEach(feature => {
-                const div = document.createElement('div');
-                div.className = 'bg-blue-50 text-blue-800 px-3 py-2 rounded-lg text-sm';
-                div.innerHTML = `<i class="fas fa-check mr-2"></i>${feature}`;
-                featuresList.appendChild(div);
-            });
+    // 機能リスト
+    const featuresList = document.getElementById('featuresList');
+    featuresList.innerHTML = '';
+    result.estimated_features.forEach(feature => {
+        const div = document.createElement('div');
+        div.className = 'bg-blue-50 text-blue-800 px-3 py-2 rounded-lg text-sm';
+        div.innerHTML = `<i class="fas fa-check mr-2"></i>${feature}`;
+        featuresList.appendChild(div);
+    });
 
-            // フェーズ別工数
-            const phasesList = document.getElementById('phasesList');
-            phasesList.innerHTML = '';
-            Object.entries(result.phases).forEach(([phase, data]) => {
-                const div = document.createElement('div');
-                div.className = 'flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg mb-2';
-                div.innerHTML = `
-                    <div class="font-medium">${phase}</div>
-                    <div class="text-right">
-                        <div class="font-bold text-lg">${data.hours}時間</div>
-                        <div class="text-sm text-gray-600">¥${data.cost.toLocaleString()}</div>
-                    </div>
-                `;
-                phasesList.appendChild(div);
-            });
+    // フェーズ別工数
+    const phasesList = document.getElementById('phasesList');
+    phasesList.innerHTML = '';
+    Object.entries(result.phases).forEach(([phase, data]) => {
+        const div = document.createElement('div');
+        div.className = 'flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg mb-2';
+        div.innerHTML = `
+            <div class="font-medium">${phase}</div>
+            <div class="text-right">
+                <div class="font-bold text-lg">${data.hours}時間</div>
+                <div class="text-sm text-gray-600">¥${data.cost.toLocaleString()}</div>
+            </div>
+        `;
+        phasesList.appendChild(div);
+    });
 
-            // 類似プロジェクト
-            const similarProjects = document.getElementById('similarProjects');
-            similarProjects.innerHTML = '';
-            if (result.similar_projects.length === 0) {
-                similarProjects.innerHTML = '<p class="text-gray-500 text-center py-4">類似プロジェクトが見つかりませんでした</p>';
-            } else {
-                result.similar_projects.forEach(project => {
-                    const div = document.createElement('div');
-                    div.className = 'border border-gray-200 rounded-lg p-4 mb-4';
-                    div.innerHTML = `
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-semibold text-lg">${project.title}</h4>
-                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">類似度: ${project.similarity}</span>
-                        </div>
-                        <p class="text-gray-700 mb-2">${project.description}</p>
-                        <div class="flex justify-between text-sm text-gray-600">
-                            <span>工数: ${project.hours}時間</span>
-                            <span>費用: ${project.cost}</span>
-                        </div>
-                        ${project.company ? `<div class="text-xs text-blue-600 mt-1">開発会社: ${project.company}</div>` : ''}
-                    `;
-                    similarProjects.appendChild(div);
-                });
-            }
+    // 類似プロジェクト
+    const similarProjects = document.getElementById('similarProjects');
+    similarProjects.innerHTML = '';
+    if (result.similar_projects.length === 0) {
+        similarProjects.innerHTML = '<p class="text-gray-500 text-center py-4">類似プロジェクトが見つかりませんでした</p>';
+    } else {
+        result.similar_projects.forEach(project => {
+            const div = document.createElement('div');
+            div.className = 'border border-gray-200 rounded-lg p-4 mb-4';
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-semibold text-lg">${project.title}</h4>
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">類似度: ${project.similarity}</span>
+                </div>
+                <p class="text-gray-700 mb-2">${project.description}</p>
+                <div class="flex justify-between text-sm text-gray-600">
+                    <span>工数: ${project.hours}時間</span>
+                    <span>費用: ${project.cost}</span>
+                </div>
+                ${project.company ? `<div class="text-xs text-blue-600 mt-1">開発会社: ${project.company}</div>` : ''}
+            `;
+            similarProjects.appendChild(div);
+        });
+    }
 
-            // 結果表示
-            document.getElementById('results').classList.remove('hidden');
-            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
-        }bg-gray-50 rounded-lg mb-2';
-                div.innerHTML = `
-                    <div class="font-medium">${phase}</div>
-                    <div class="text-right">
-                        <div class="font-bold text-lg">${data.hours}時間</div>
-                        <div class="text-sm text-gray-600">¥${data.cost.toLocaleString()}</div>
-                    </div>
-                `;
-                phasesList.appendChild(div);
-            });
-
-            // 類似プロジェクト
-            const similarProjects = document.getElementById('similarProjects');
-            similarProjects.innerHTML = '';
-            if (result.similar_projects.length === 0) {
-                similarProjects.innerHTML = '<p class="text-gray-500 text-center py-4">類似プロジェクトが見つかりませんでした</p>';
-            } else {
-                result.similar_projects.forEach(project => {
-                    const div = document.createElement('div');
-                    div.className = 'border border-gray-200 rounded-lg p-4 mb-4';
-                    div.innerHTML = `
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-semibold text-lg">${project.title}</h4>
-                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">類似度: ${project.similarity}</span>
-                        </div>
-                        <p class="text-gray-700 mb-2">${project.description}</p>
-                        <div class="flex justify-between text-sm text-gray-600">
-                            <span>工数: ${project.hours}時間</span>
-                            <span>費用: ${project.cost}</span>
-                        </div>
-                    `;
-                    similarProjects.appendChild(div);
-                });
-            }
-
-            // 結果表示
-            document.getElementById('results').classList.remove('hidden');
-            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
-        }
+    // 結果表示
+    document.getElementById('results').classList.remove('hidden');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
 
         // CSVダウンロード
         document.getElementById('downloadBtn').addEventListener('click', function() {
